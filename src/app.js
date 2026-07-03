@@ -18,4 +18,12 @@ app.use(
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static("public"));
 
+// router imports
+import userRoutes from "./routes/user.routes.js";
+
+// router middleware declaration
+app.use("/api/v1/users", userRoutes);
+
+// https:localhost:8000/api/v1/users/register
+
 export default app;
