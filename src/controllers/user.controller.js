@@ -1,6 +1,8 @@
 import asuncFunction from "../utils/asyncFunction.js";
 import apiError from "../utils/apiError.js";
-import userModel from "../models/user.model.js";
+import User from "../models/user.model.js";
+import uploadToCloudinary from "../utils/cloudinary.js";
+import ApiResponse from "../utils/apiResponse.js";
 
 const registerUser = asuncFunction(async (req, res) => {
   // get the user data from the request body mean from the frontend
@@ -20,17 +22,54 @@ const registerUser = asuncFunction(async (req, res) => {
     throw new apiError(400, "All fields are required");
   }
 
-  const existingUser = await userModel.findOne({
+  const existingUser = await User.findOne({
     $or: [{ email }, { username }],
   });
+  console.log("Existing user:", existingUser);
 
   if (existingUser) {
     throw new apiError(409, "User already exists");
   }
 
-  res
+  const avatarLocalPath = await req.files?.avatar[0]?.path;
+  const coverImageLocalPath = await req.files?.coverImage[0]?.path;
+
+  if (!avatarLocalPath) {
+    throw new apiError(400, "Avatar image is required");
+  }
+  const avatar = await uploadToCloudinary(avatarLocalPath, "avatars");
+
+  const coverImage = await uploadToCloudinary(
+    coverImageLocalPath,
+    "coverImages"
+  );
+
+  if (!avatar) {
+    throw new apiError(500, "Failed to upload avatar image");
+  }
+  if (!coverImage) {
+    throw new apiError(500, "Failed to upload cover image");
+  }
+
+  const user = await User.create({
+    fullName,
+    username: username.toLowerCase(),
+    email,
+    password,
+    avatar: avatar.url,
+    coverImage: coverImage?.url || "", // optional field, can be empty string if not provided
+  });
+
+  const foundUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+  if (!foundUser) {
+    throw new apiError(500, "User not found after creation");
+  }
+
+  return res
     .status(201)
-    .json({ success: true, message: "User registered successfully" });
+    .json(new ApiResponse(201, "User registered successfully", foundUser));
 });
 
 export default registerUser;

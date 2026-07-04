@@ -3,7 +3,12 @@ import { DB_NAME } from "../constant.js";
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(`${process.env.MONGO_URL}/${DB_NAME}`);
+    const mongoBase = process.env.MONGO_URL.replace(/\/+$|\/+$/g, "").replace(
+      /\/+$/,
+      ""
+    );
+    const uri = `${mongoBase}/${DB_NAME}`;
+    await mongoose.connect(uri);
     console.log("MongoDB connected");
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
