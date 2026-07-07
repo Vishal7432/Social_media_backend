@@ -31,24 +31,20 @@ const registerUser = asuncFunction(async (req, res) => {
     throw new apiError(409, "User already exists");
   }
 
-  const avatarLocalPath = await req.files?.avatar[0]?.path;
-  const coverImageLocalPath = await req.files?.coverImage[0]?.path;
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
 
   if (!avatarLocalPath) {
     throw new apiError(400, "Avatar image is required");
   }
-  const avatar = await uploadToCloudinary(avatarLocalPath, "avatars");
 
-  const coverImage = await uploadToCloudinary(
-    coverImageLocalPath,
-    "coverImages"
-  );
+  const avatar = await uploadToCloudinary(avatarLocalPath, "avatars");
+  const coverImage = coverImageLocalPath
+    ? await uploadToCloudinary(coverImageLocalPath, "coverImages")
+    : null;
 
   if (!avatar) {
     throw new apiError(500, "Failed to upload avatar image");
-  }
-  if (!coverImage) {
-    throw new apiError(500, "Failed to upload cover image");
   }
 
   const user = await User.create({
