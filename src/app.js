@@ -23,7 +23,24 @@ import userRoutes from "./routes/user.routes.js";
 
 // router middleware declaration
 app.use("/api/v1/users", userRoutes);
+//
 
-// https:localhost:8000/api/v1/users/register
+// handle unknown routes
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.method} ${req.originalUrl} not found`,
+  });
+});
+
+// global error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+    ...(process.env.NODE_ENV !== "production" ? { stack: err.stack } : {}),
+  });
+});
 
 export default app;
