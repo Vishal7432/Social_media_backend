@@ -31,8 +31,12 @@ const registerUser = asuncFunction(async (req, res) => {
     throw new apiError(409, "User already exists");
   }
 
+  // console.log("Files received:", req.files);
+
   const avatarLocalPath = req.files?.avatar?.[0]?.path;
   const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+  // console.log("Avatar local path:", avatarLocalPath);
+  // console.log("Cover image local path:", coverImageLocalPath);
 
   if (!avatarLocalPath) {
     throw new apiError(400, "Avatar image is required");
@@ -68,4 +72,36 @@ const registerUser = asuncFunction(async (req, res) => {
     .json(new ApiResponse(201, "User registered successfully", foundUser));
 });
 
-export default registerUser;
+const loginUser = asuncFunction(async (req, res) => {
+  // get the user data from the request body mean from the frontend
+  // validation - not empty fields, email format, password strength, etc.
+  // check if the user exists in the database validation - email, username, etc.
+  // if not, send an error response back to the frontend
+  // if yes, check if the password is correct
+  // if not, send an error response back to the frontend
+  // if yes, generate a new access token and refresh token
+  // save the refresh token to the database
+  // send a response back to the frontend with the user data and a success message
+
+  const { email, username, password } = req.body;
+
+  if (!email || !username || !password) {
+    throw new apiError(400, "All fields are required");
+  }
+
+  const user = await User.findOne({
+    $or: [{ email }, { username }],
+  });
+
+  if (!user) {
+    throw new apiError(404, "User not found");
+  }
+
+  const isPasswordValid = await user.isPasswordCorrect(password);
+
+  if (!isPasswordValid) {
+    throw new apiError(401, "Invalid user credentials");
+  }
+});
+
+export default { registerUser, loginUser };
