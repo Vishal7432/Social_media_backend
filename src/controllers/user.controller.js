@@ -1,10 +1,31 @@
-import asuncFunction from "../utils/asyncFunction.js";
+import asyncHandler from "../utils/asyncFunction.js";
 import apiError from "../utils/apiError.js";
 import User from "../models/user.model.js";
 import uploadToCloudinary from "../utils/cloudinary.js";
 import ApiResponse from "../utils/apiResponse.js";
 
-const registerUser = asuncFunction(async (req, res) => {
+const generateAccessAndRefreshTokens = async (user_id) => {
+  try {
+    const user = await User.findById(user_id);
+    if (!user) {
+      throw new apiError(404, "User not found");
+    }
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new apiError(
+      500,
+      "Something went wrong while generating refresh and access tokens for user with id: " +
+        user_id
+    );
+  }
+};
+
+const registerUser = asyncHandler(async (req, res) => {
   // get the user data from the request body mean from the frontend
   // validation - not empty fields, email format, password strength, etc.
   // check if the user already exists in the database validation - email, username, etc.
@@ -72,7 +93,7 @@ const registerUser = asuncFunction(async (req, res) => {
     .json(new ApiResponse(201, "User registered successfully", foundUser));
 });
 
-const loginUser = asuncFunction(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   // get the user data from the request body mean from the frontend
   // validation - not empty fields, email format, password strength, etc.
   // check if the user exists in the database validation - email, username, etc.
@@ -85,12 +106,12 @@ const loginUser = asuncFunction(async (req, res) => {
 
   const { email, username, password } = req.body;
 
-  if (!email || !username || !password) {
+  if (!(email || username)) {
     throw new apiError(400, "All fields are required");
   }
 
   const user = await User.findOne({
-    $or: [{ email }, { username }],
+    $or: [{ email }, { username }], // ya to email through access do ya username ke..
   });
 
   if (!user) {
@@ -102,6 +123,64 @@ const loginUser = asuncFunction(async (req, res) => {
   if (!isPasswordValid) {
     throw new apiError(401, "Invalid user credentials");
   }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user.id
+  );
+
+  const foundUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // set to true in production
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
+  return res
+    .status(200)
+    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        { user: loggedInUser, accessToken, refreshToken },
+        "User logged in successfully",
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        }
+      )
+    );
 });
 
-export default { registerUser, loginUser };
+const logoutUser = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $unset: {
+        refreshToken: 1,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
+
+  return res
+    .status(200)
+    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", options)
+    .json(new ApiResponse(200, null, "User logged out successfully"));
+});
+
+export default { registerUser, loginUser, logoutUser };
