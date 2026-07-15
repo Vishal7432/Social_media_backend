@@ -61,16 +61,18 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
-    // JWT => bearer token hai jo user ko authenticate karne ke liye use hota hai, aur isme user ka data hota hai jaise ki _id, email, username, fullname. Ye token ek secret key se sign hota hai aur ek expiry time ke saath aata hai.
     {
       _id: this._id,
       email: this.email,
       username: this.username,
-      fullname: this.fullname,
+      fullName: this.fullName,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+      expiresIn:
+        process.env.ACCESS_TOKEN_EXPIRY ||
+        process.env.ACCESS_TOKEN_EXPIRATION ||
+        "1d",
     }
   );
 };
@@ -82,7 +84,10 @@ userSchema.methods.generateRefreshToken = function () {
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+      expiresIn:
+        process.env.REFRESH_TOKEN_EXPIRY ||
+        process.env.REFRESH_TOKEN_EXPIRATION ||
+        "15d",
     }
   );
 };
