@@ -30,4 +30,13 @@ const uploadOnCloudinary = async (localFilePath, folder = "") => {
   }
 };
 
-export default uploadOnCloudinary;
+// delete old avatar and cover image from cloudinary when updating new ones
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error("Cloudinary delete error:", error);
+  }
+};
+
+export { uploadOnCloudinary, deleteFromCloudinary };

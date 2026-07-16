@@ -1,7 +1,10 @@
 import asyncHandler from "../utils/asyncFunction.js";
 import apiError from "../utils/apiError.js";
 import User from "../models/user.model.js";
-import uploadToCloudinary from "../utils/cloudinary.js";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 import ApiResponse from "../utils/apiResponse.js";
 
 const generateAccessAndRefreshTokens = async (user_id) => {
@@ -344,6 +347,33 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Cover image updated successfully", user));
 });
 
+// todo: delete old avatar and cover image from cloudinary when updating new ones
+const deleteOldAvatarAndCoverImage = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    throw new apiError(404, "User not found");
+  }
+
+  if (user.avatar) {
+    await deleteFromCloudinary(user.avatar);
+  }
+
+  if (user.coverImage) {
+    await deleteFromCloudinary(user.coverImage);
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "Old avatar and cover image deleted successfully",
+        user
+      )
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -354,4 +384,5 @@ export {
   updateAcountDetails,
   updateAvatar,
   updateCoverImage,
+  deleteOldAvatarAndCoverImage,
 };
