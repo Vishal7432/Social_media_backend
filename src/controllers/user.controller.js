@@ -392,7 +392,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       $match: { username: username.toLowerCase() },
     },
     {
-      lookup: {
+      $lookup: {
         from: "subscriptions",
         localField: "_id",
         foreignField: "channel",
@@ -400,7 +400,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     },
     {
-      lookup: {
+      $lookup: {
         from: "subscriptions",
         localField: "_id",
         foreignField: "subscriber",
@@ -408,7 +408,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     },
     {
-      addFields: {
+      $addFields: {
         subscribersCount: { $size: "$subscribers" },
         channelsSubscribedToCount: { $size: "$channelsSubscribedTo" },
         isSubscribed: {
@@ -450,6 +450,64 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "Video",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  if (!user) {
+    throw new apiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "Watch history fetched successfully",
+        user[0].watchHistory
+      )
+    );
+});
+
 export {
   registerUser,
   loginUser,
@@ -461,4 +519,5 @@ export {
   updateAvatar,
   updateCoverImage,
   deleteOldAvatarAndCoverImage,
+  getWatchHistory,
 };
