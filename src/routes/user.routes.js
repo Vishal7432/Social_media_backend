@@ -45,13 +45,11 @@ router.route("/current-user").get(verifyJWT, getCurrentUserProfile);
 
 router.route("/update-acount").get(verifyJWT, updateAcountDetails);
 
-router
-  .route("/avatar")
-  .patch(verifyJWT, upload.single("/avatar"), updateAvatar);
+router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateAvatar);
 
 router
   .route("/coverImage")
-  .post(verifyJWT, upload.single("/coverImage"), updateCoverImage);
+  .post(verifyJWT, upload.single("coverImage"), updateCoverImage);
 
 router.route("/c/:username").get(verifyJWT, getUserChannelProfile);
 
