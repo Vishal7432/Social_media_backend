@@ -9,7 +9,7 @@ A scalable RESTful backend for a social media platform, built with **Node.js, Ex
 
 ## 🚀 Overview
 
-This project is the backend for an Youtube/Twitter-style social platform, designed with an emphasis on clean, scalable architecture — controller-service separation, centralized error handling, and reusable middleware. It was built to deepen hands-on understanding of production-grade backend patterns (JWT refresh tokens, file uploads, complex MongoDB aggregation pipelines) rather than following a tutorial blindly — every route was implemented, tested, and debugged independently.
+This project is the backend for an youtube/Twitter-style social platform, designed with an emphasis on clean, scalable architecture — controller-service separation, centralized error handling, and reusable middleware. It was built to deepen hands-on understanding of production-grade backend patterns (JWT refresh tokens, file uploads, complex MongoDB aggregation pipelines) rather than following a tutorial blindly — every route was implemented, tested, and debugged independently.
 
 ## ✨ Features
 
@@ -19,8 +19,6 @@ This project is the backend for an Youtube/Twitter-style social platform, design
 - **Aggregation Pipelines** — Complex MongoDB pipelines (`$lookup`, `$addFields`, `$cond`) used to compute channel profile stats (subscriber count, subscription count, `isSubscribed` flag) in a single optimized query
 - **Centralized Error Handling** — Custom `ApiError` and `ApiResponse` classes for consistent API responses
 - **Async Handler Wrapper** — Clean controller code without repetitive try/catch blocks
-
-> _(Edit this list to match exactly what's implemented — e.g. posts/tweets CRUD, comments, likes — before publishing.)_
 
 ## 🛠️ Tech Stack
 
@@ -32,6 +30,12 @@ This project is the backend for an Youtube/Twitter-style social platform, design
 | Auth         | JWT (access + refresh tokens), bcrypt |
 | File Storage | Cloudinary + Multer                   |
 | Dev Tools    | Prettier, dotenv                      |
+
+### Data Models
+
+Here you can see the Data Model:-
+
+- [Model link](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
 
 ## 📂 Project Structure
 
@@ -62,12 +66,6 @@ cd Social_media_backend
 npm install
 ```
 
-### Data Models
-
-Here you can see the Data Model:-
-
-- [Model link](https://app.eraser.io/workspace/YtPqZ1VogxGy1jzIDkzj)
-
 ### Environment Variables
 
 Create a `.env` file in the root directory:
@@ -95,17 +93,23 @@ npm run dev
 
 Server will start on `http://localhost:8000`
 
-## 📌 API Endpoints (sample)
+## 📌 API Endpoints
 
-| Method | Endpoint                      | Description                                 |
-| ------ | ----------------------------- | ------------------------------------------- |
-| POST   | `/api/v1/users/register`      | Register a new user                         |
-| POST   | `/api/v1/users/login`         | Login user                                  |
-| POST   | `/api/v1/users/logout`        | Logout user                                 |
-| POST   | `/api/v1/users/refresh-token` | Refresh access token                        |
-| GET    | `/api/v1/users/c/:username`   | Get channel profile (with subscriber stats) |
+**Base URL:** `/api/v1/users`
 
-> _(Update this table with your actual routes — recruiters skim this section closely.)_
+| Method | Endpoint           | Auth Required | Description                                                                                           |
+| ------ | ------------------ | ------------- | ----------------------------------------------------------------------------------------------------- |
+| POST   | `/register`        | No            | Register a new user (with avatar + cover image upload)                                                |
+| POST   | `/login`           | No            | Login user                                                                                            |
+| POST   | `/logout`          | Yes           | Logout user, clear refresh token                                                                      |
+| POST   | `/refresh-token`   | No            | Get a new access token using refresh token                                                            |
+| POST   | `/change-password` | Yes           | Change current user's password                                                                        |
+| GET    | `/current-user`    | Yes           | Get logged-in user's profile                                                                          |
+| PATCH  | `/update-account`  | Yes           | Update account details (name, email)                                                                  |
+| PATCH  | `/avatar`          | Yes           | Update avatar image                                                                                   |
+| POST   | `/coverImage`      | Yes           | Update cover image                                                                                    |
+| GET    | `/c/:username`     | Yes           | Get channel profile — subscriber count, subscription count, `isSubscribed` (via aggregation pipeline) |
+| GET    | `/history`         | Yes           | Get watch/activity history                                                                            |
 
 ## 🧠 What I Learned
 
