@@ -2,10 +2,11 @@ import asyncHandler from "../utils/asyncFunction.js";
 import apiError from "../utils/apiError.js";
 import User from "../models/user.model.js";
 import {
-  uploadToCloudinary,
+  uploadOnCloudinary,
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/apiResponse.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshTokens = async (user_id) => {
   try {
@@ -506,6 +507,49 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         user[0].watchHistory
       )
     );
+});
+
+const updateVideo = asyncHandler(async (req, res) => {
+  const videoLocalPath = req.file?.path;
+
+  if (!videoLocalPath) {
+    throw new apiError(400, "Video file is missing!");
+  }
+
+  // 1. Purana user data nikalo (purani video ka public_id chahiye)
+  const currentUser = await User.findById(req.user._id);
+
+  // 2. Naya video Cloudinary pe upload karo (folder bhi de sakte ho)
+  const uploadedVideo = await uploadOnCloudinary(videoLocalPath, "videos");
+
+  if (!uploadedVideo?.url) {
+    throw new apiError(500, "Error while uploading video");
+  }
+
+  // 3. Purani video thi to delete karo (resource_type: "video" pass karna zaroori)
+  if (currentUser?.videoFilePublicId) {
+    await deleteFromCloudinary(currentUser.videoFilePublicId, "video");
+  }
+
+  // 4. DB update — URL aur public_id dono save karo
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        videoFile: uploadedVideo.url,
+        videoFilePublicId: uploadedVideo.public_id,
+      },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  if (!user) {
+    throw new apiError(404, "User not found!");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Video updated successfully"));
 });
 
 export {
