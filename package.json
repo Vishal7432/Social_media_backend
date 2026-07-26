@@ -5,9 +5,10 @@
   "license": "ISC",
   "author": "vishal-gupta",
   "type": "module",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon -r dotenv/config src/server.js dotenv_config_path=.env"
+    "dev": "nodemon -r dotenv/config src/server.js dotenv_config_path=.env",
+    "start": "node src/server.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
