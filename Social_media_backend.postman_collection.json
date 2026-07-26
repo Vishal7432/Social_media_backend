@@ -1,0 +1,373 @@
+{
+  "info": {
+    "_postman_id": "7032409b-9250-44dd-ab51-e484fb773c78",
+    "name": "Social_media_backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55882107",
+    "_collection_link": "https://go.postman.co/collection/55882107-7032409b-9250-44dd-ab51-e484fb773c78?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "users",
+      "item": [
+        {
+          "name": "register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fullName",
+                  "value": "rahul yadav",
+                  "type": "text",
+                  "uuid": "bfda6a4c-4e42-4727-8a4e-915d47047445"
+                },
+                {
+                  "key": "username",
+                  "value": "rahulyadav@123",
+                  "type": "text",
+                  "uuid": "438253f8-f8f3-4561-8395-a071d35523a6"
+                },
+                {
+                  "key": "email",
+                  "value": "rahulyadav@gmail.com",
+                  "type": "text",
+                  "uuid": "8dbf489f-c15a-43c9-86de-fd03a233ce4a"
+                },
+                {
+                  "key": "password",
+                  "value": "123456",
+                  "type": "text",
+                  "uuid": "1d9f0c5e-de3c-451c-aca9-c7871dff56a7"
+                },
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "uuid": "43bd6af1-161a-475e-b035-691dbe9d3d40",
+                  "src": "/C:/Users/visha.DESKTOP-RK0HU3U/OneDrive/Pictures/21.jpg"
+                },
+                {
+                  "key": "coverImage",
+                  "type": "file",
+                  "uuid": "0c3d6d62-c0c1-4b54-9d3e-ee36741717ec",
+                  "src": "/C:/Users/visha.DESKTOP-RK0HU3U/OneDrive/Pictures/133918670741092659.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{server}}/users/login",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "login",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"amitgupta12@gmail.com\",\r\n    \"password\": \"723496\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{server}}/users/login",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "logout",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{server}}/users/logout",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "refresh-token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"amitgupta@gmail.com\",\r\n    \"password\": \"123456\"\r\n}"
+            },
+            "url": {
+              "raw": "{{server}}/users/refresh-token",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "refresh-token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "current-user",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"amitgupta@gmail.com\"\r\n}"
+            },
+            "url": {
+              "raw": "{{server}}/users/current-user",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "current-user"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update-acount",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"amit gupta\",\r\n    \"username\": \"amitgupta@123\",\r\n    \"email\": \"amitgupta12@gmail.com\"\r\n\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{server}}/users/update-acount",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "update-acount"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "change-password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"currentPassword\": \"123456\",\r\n    \"newPassword\": \"723496\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{server}}/users/change-password",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "change-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "avatar",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"amitgupta@gmail.com\",\r\n    \"password\": \"123456\"\r\n}"
+            },
+            "url": {
+              "raw": "{{server}}/users/coverImage",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "coverImage"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "coverImage",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"currentPassword\": \"123456\",\r\n    \"newPassword\": \"723496\"\r\n}"
+            },
+            "url": {
+              "raw": "{{server}}/users/coverImage",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "coverImage"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getUserChannelProfile",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"amitgupta12@gmail.com\",\r\n    \"password\": \"723496\"\r\n}"
+            },
+            "url": {
+              "raw": "{{server}}/users//c/:username",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "",
+                "c",
+                ":username"
+              ],
+              "variable": [
+                {
+                  "key": "username",
+                  "value": "amitgupta@123"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "getUserChannelProfile",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"amitgupta12@gmail.com\",\r\n    \"password\": \"723496\"\r\n}"
+            },
+            "url": {
+              "raw": "{{server}}/users/history",
+              "host": [
+                "{{server}}"
+              ],
+              "path": [
+                "users",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
