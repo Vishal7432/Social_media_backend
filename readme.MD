@@ -2,8 +2,7 @@
 
 A scalable RESTful backend for a social media platform, built with **Node.js, Express.js, and MongoDB**. Implements secure JWT-based authentication, media uploads via Cloudinary, and a Twitter/YouTube-style **subscribe (follow) system** powered by MongoDB's aggregation framework.
 
-<!-- Optional: add badges once deployed -->
-<!-- ![Node.js](https://img.shields.io/badge/Node.js-18.x-green) ![Express](https://img.shields.io/badge/Express.js-4.x-black) ![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-brightgreen) -->
+🔗 Live API: https://social-media-backend-mxz5.onrender.com
 
 ---
 
