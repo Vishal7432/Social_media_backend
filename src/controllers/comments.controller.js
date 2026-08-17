@@ -73,6 +73,7 @@ const addComment = asyncHandler(async (req, res) => {
   // TODO: add a comment to a video
   const { videoID } = req.params;
   const { content } = req.body;
+  
 });
 
 const updateComment = asyncHandler(async (req, res) => {
