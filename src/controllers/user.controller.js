@@ -5,7 +5,7 @@ import {
   uploadOnCloudinary,
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
-import ApiResponse from "../utils/apiResponse.js";
+import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshTokens = async (user_id) => {

@@ -1,7 +1,7 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
-import { ApiError } from "../utils/ApiError.js";
+import apiError from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
@@ -24,7 +24,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   if (userId) {
     if (!isValidObjectId(userId)) {
-      throw new ApiError(400, "Invalid userId");
+      throw new apiError(400, "Invalid userId");
     }
     matchStage.owner = new mongoose.Types.ObjectId(userId);
   }
@@ -93,10 +93,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
   // 1. Validation - title aur description required
   if (!title || title.trim() === "") {
-    throw new ApiError(400, "Title is required");
+    throw new apiError(400, "Title is required");
   }
   if (!description || description.trim() === "") {
-    throw new ApiError(400, "Description is required");
+    throw new apiError(400, "Description is required");
   }
 
   // 2. Local file paths nikalna (multer ne req.files mein daala hai)
@@ -104,10 +104,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
   const thumbnailLocalPath = req.files?.thumbnail?.[0]?.path;
 
   if (!videoFileLocalPath) {
-    throw new ApiError(400, "Video file is required");
+    throw new apiError(400, "Video file is required");
   }
   if (!thumbnailLocalPath) {
-    throw new ApiError(400, "Thumbnail is required");
+    throw new apiError(400, "Thumbnail is required");
   }
 
   // 3. Cloudinary pe upload karna
@@ -115,10 +115,10 @@ const publishAVideo = asyncHandler(async (req, res) => {
   const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
   if (!videoFile) {
-    throw new ApiError(400, "Video file upload failed");
+    throw new apiError(400, "Video file upload failed");
   }
   if (!thumbnail) {
-    throw new ApiError(400, "Thumbnail upload failed");
+    throw new apiError(400, "Thumbnail upload failed");
   }
 
   // 4. Video document create karna DB mein
@@ -133,7 +133,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
   });
 
   if (!video) {
-    throw new ApiError(500, "Something went wrong while publishing the video");
+    throw new apiError(500, "Something went wrong while publishing the video");
   }
 
   // 5. Response bhejna
@@ -147,7 +147,7 @@ const getVideoById = asyncHandler(async (req, res) => {
   //TODO: get video by id
   const video = await Video.findById(videoId);
   if (!video) {
-    throw new ApiError(404, "Video not found");
+    throw new apiError(404, "Video not found");
   }
   return res
     .status(200)
@@ -161,22 +161,22 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   // 1. videoId valid hai ya nahi
   if (!isValidObjectId(videoId)) {
-    throw new ApiError(400, "Invalid video ID");
+    throw new apiError(400, "Invalid video ID");
   }
 
   if (!title && !description && !req.file) {
-    throw new ApiError(400, "At least one field is required to update");
+    throw new apiError(400, "At least one field is required to update");
   }
 
   // 2. Video exist karti hai ya nahi, aur ownership check
   const video = await Video.findById(videoId);
 
   if (!video) {
-    throw new ApiError(404, "Video not found");
+    throw new apiError(404, "Video not found");
   }
 
   if (video.owner.toString() !== req.user?._id.toString()) {
-    throw new ApiError(403, "You are not authorized to update this video");
+    throw new apiError(403, "You are not authorized to update this video");
   }
 
   // 3. Update object dynamically banate hain - jo field aaya usi ko update karo
@@ -193,7 +193,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
     if (!thumbnail?.url) {
-      throw new ApiError(400, "Error while uploading thumbnail");
+      throw new apiError(400, "Error while uploading thumbnail");
     }
 
     updateFields.thumbnail = thumbnail.url;
@@ -207,7 +207,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   );
 
   if (!updatedVideo) {
-    throw new ApiError(500, "Something went wrong while updating video");
+    throw new apiError(500, "Something went wrong while updating video");
   }
 
   // 6. Purana thumbnail cloudinary se delete kar do (agar naya upload hua ho)
@@ -226,11 +226,11 @@ const deleteVideo = asyncHandler(async (req, res) => {
   const video = await Video.findById(videoId);
 
   if (!video) {
-    throw new ApiError(404, "Video not found");
+    throw new apiError(404, "Video not found");
   }
 
   if (video.owner.toString() !== req.user?._id.toString()) {
-    throw new ApiError(403, "You are not authorized to delete this video");
+    throw new apiError(403, "You are not authorized to delete this video");
   }
 
   // Delete the video from Cloudinary
@@ -255,7 +255,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   const video = await Video.findById(videoId);
 
   if (!video) {
-    throw new ApiError(404, "Video not found");
+    throw new apiError(404, "Video not found");
   }
 
   video.isPublished = !video.isPublished;
