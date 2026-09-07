@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import { Video } from "../models/video.model.js";
-import { Subscription } from "../models/subscription.model.js";
-import { Like } from "../models/like.model.js";
+import Video from "../models/video.models.js";
+import Subscription from "../models/subcription.model.js";
+import { Like } from "../models/likes.model.js";
 import apiError from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import asyncHandler from "../utils/asyncFunction.js";
 
 const getChannelStats = asyncHandler(async (req, res) => {
   const channelId = req.params.channelId;
