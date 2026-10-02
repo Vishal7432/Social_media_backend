@@ -11,17 +11,24 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
+  const allowedVideoTypes = [
     "video/mp4",
     "video/mkv",
     "video/webm",
     "video/quicktime",
   ];
+  const imageFields = ["avatar", "coverImage", "thumbnail"];
+  const videoFields = ["video", "videoFile"];
+  const isAllowedImage =
+    imageFields.includes(file.fieldname) && file.mimetype.startsWith("image/");
+  const isAllowedVideo =
+    videoFields.includes(file.fieldname) &&
+    allowedVideoTypes.includes(file.mimetype);
 
-  if (allowedTypes.includes(file.minetype)) {
+  if (isAllowedImage || isAllowedVideo) {
     cb(null, true);
   } else {
-    cb(new Error("Only video file "));
+    cb(new Error("Unsupported file type for this upload field"));
   }
 };
 

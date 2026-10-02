@@ -7,7 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncFunction.js";
 
 const getChannelStats = asyncHandler(async (req, res) => {
-  const channelId = req.params.channelId;
+  const channelId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(channelId)) {
     throw new apiError(400, "Invalid channel id");
@@ -59,7 +59,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
 });
 
 const getChannelVideos = asyncHandler(async (req, res) => {
-  const channelId = req.params.channelId;
+  const channelId = req.user._id;
 
   if (!mongoose.Types.ObjectId.isValid(channelId)) {
     throw new apiError(400, "Invalid channel id");

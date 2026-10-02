@@ -43,7 +43,6 @@ const registerUser = asyncHandler(async (req, res) => {
   // save the user data to the database
   // send a response back to the frontend with the user data and a success message
   const { fullName, username, email, password } = req.body;
-  console.log("User data:", { fullName, username, email, password });
 
   if ([fullName, username, email, password].some((field) => !field)) {
     throw new apiError(400, "All fields are required");
@@ -52,7 +51,6 @@ const registerUser = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({
     $or: [{ email }, { username }],
   });
-  console.log("Existing user:", existingUser);
 
   if (existingUser) {
     throw new apiError(409, "User already exists");
@@ -69,9 +67,9 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new apiError(400, "Avatar image is required");
   }
 
-  const avatar = await uploadToCloudinary(avatarLocalPath, "avatars");
+  const avatar = await uploadOnCloudinary(avatarLocalPath, "avatars");
   const coverImage = coverImageLocalPath
-    ? await uploadToCloudinary(coverImageLocalPath, "coverImages")
+    ? await uploadOnCloudinary(coverImageLocalPath, "coverImages")
     : null;
 
   if (!avatar) {

@@ -4,7 +4,12 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }));
+const corsOrigins = (process.env.CORS_ORIGIN ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({ origin: corsOrigins, credentials: true }));
 
 app.use(express.json({ limit: "50mb" }));
 
