@@ -4,7 +4,13 @@ const tweetSchema = new mongoose.Schema(
   {
     content: {
       type: String,
-      require: true,
+      trim: true,
+    },
+    image: {
+      type: String,
+    },
+    imagePublicId: {
+      type: String,
     },
 
     owner: {

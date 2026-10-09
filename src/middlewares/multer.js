@@ -17,7 +17,7 @@ const fileFilter = (req, file, cb) => {
     "video/webm",
     "video/quicktime",
   ];
-  const imageFields = ["avatar", "coverImage", "thumbnail"];
+  const imageFields = ["avatar", "coverImage", "thumbnail", "image"];
   const videoFields = ["video", "videoFile"];
   const isAllowedImage =
     imageFields.includes(file.fieldname) && file.mimetype.startsWith("image/");
@@ -39,3 +39,11 @@ export const upload = multer({
     fileSize: 100 * 1024 * 1024, // 100 MB
   },
 });
+
+export const uploadPostImage = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+}).single("image");

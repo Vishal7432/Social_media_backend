@@ -4,17 +4,30 @@ import User from "../models/user.model.js";
 import apiError from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncFunction.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 const createTweet = asyncHandler(async (req, res) => {
-  const { content } = req.body;
+  const content = req.body.content?.trim() ?? "";
 
-  if (!content?.trim()) {
-    throw new apiError(400, "Tweet content is required");
+  if (!content && !req.file) {
+    throw new apiError(400, "Post text or an image is required");
+  }
+
+  const uploadedImage = req.file
+    ? await uploadOnCloudinary(req.file.path, "tubev/posts")
+    : null;
+
+  if (req.file && !uploadedImage?.secure_url) {
+    throw new apiError(500, "Could not upload post image");
   }
 
   const tweet = await Tweet.create({
     content,
     owner: req.user?._id,
+    ...(uploadedImage && {
+      image: uploadedImage.secure_url,
+      imagePublicId: uploadedImage.public_id,
+    }),
   });
 
   if (!tweet) {
@@ -64,6 +77,14 @@ const getUserTweets = asyncHandler(async (req, res) => {
     {
       $addFields: {
         ownerDetails: { $first: "$ownerDetails" },
+      },
+    },
+    {
+      $project: {
+        content: 1,
+        image: 1,
+        createdAt: 1,
+        ownerDetails: 1,
       },
     },
     {
@@ -129,6 +150,9 @@ const deleteTweet = asyncHandler(async (req, res) => {
   }
 
   await Tweet.findByIdAndDelete(tweetId);
+  if (tweet.imagePublicId) {
+    await deleteFromCloudinary(tweet.imagePublicId);
+  }
 
   return res
     .status(200)

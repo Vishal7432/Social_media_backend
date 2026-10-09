@@ -264,8 +264,8 @@ const getCurrentUserProfile = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        "Current user profile fetched successfully",
-        req.user
+        req.user,
+        "Current user profile fetched successfully"
       )
     );
 });
@@ -411,9 +411,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         subscribersCount: { $size: "$subscribers" },
         channelsSubscribedToCount: { $size: "$channelsSubscribedTo" },
         isSubscribed: {
-          if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-          then: true,
-          else: false,
+          $in: [req.user?._id, "$subscribers.subscriber"],
         },
       },
     },
@@ -443,8 +441,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        "Channel profile fetched successfully",
-        channelProfile[0]
+        channelProfile[0],
+        "Channel profile fetched successfully"
       )
     );
 });
