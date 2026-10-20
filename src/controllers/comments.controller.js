@@ -1,6 +1,7 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Comment } from "../models/comments.model.js";
 import Video from "../models/video.models.js";
+import User from "../models/user.model.js";
 import apiError from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncFunction.js";
@@ -87,7 +88,7 @@ const addComment = asyncHandler(async (req, res) => {
   }
 
   const comment = await Comment.create({
-    content,
+    content: content.trim(),
     video: videoId,
     owner: req.user?._id,
   });
@@ -96,9 +97,21 @@ const addComment = asyncHandler(async (req, res) => {
     throw new apiError(500, "Failed to add comment, please try again");
   }
 
+  // Return the comment in the same shape as getVideoComments (with ownerDetails),
+  // so the frontend can show the author's name and avatar right away.
+  const ownerDetails = await User.findById(req.user._id).select(
+    "username fullName avatar"
+  );
+
   return res
     .status(201)
-    .json(new ApiResponse(201, comment, "Comment added successfully"));
+    .json(
+      new ApiResponse(
+        201,
+        { ...comment.toObject(), ownerDetails },
+        "Comment added successfully"
+      )
+    );
 });
 
 const updateComment = asyncHandler(async (req, res) => {
@@ -126,7 +139,7 @@ const updateComment = asyncHandler(async (req, res) => {
   const updatedComment = await Comment.findByIdAndUpdate(
     commentId,
     {
-      $set: { content },
+      $set: { content: content.trim() },
     },
     { new: true }
   );

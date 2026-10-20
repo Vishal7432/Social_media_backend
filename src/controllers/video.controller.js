@@ -4,7 +4,10 @@ import User from "../models/user.model.js";
 import apiError from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncFunction.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -59,7 +62,21 @@ const getAllVideos = asyncHandler(async (req, res) => {
     },
   });
 
-  // 3. Sort stage
+  // 3. Likes count (needed for the "Most liked" sort and the card UI)
+  pipeline.push(
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    { $addFields: { likesCount: { $size: "$likes" } } },
+    { $project: { likes: 0 } }
+  );
+
+  // 4. Sort stage
   const sortStage = {};
   if (sortBy && sortType) {
     sortStage[sortBy] = sortType === "asc" ? 1 : -1;
@@ -68,7 +85,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
   }
   pipeline.push({ $sort: sortStage });
 
-  // 4. Pagination using aggregatePaginate
+  // 5. Pagination using aggregatePaginate
   const options = {
     page: parseInt(page, 10),
     limit: parseInt(limit, 10),
@@ -78,10 +95,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   const videos = await Video.aggregatePaginate(videoAggregate, options);
 
-  if (!videos || videos.docs.length === 0) {
-    return res.status(200).json(new ApiResponse(200, [], "No videos found"));
-  }
-
+  // Always return the paginated shape (docs: [] when nothing matches),
+  // so the frontend never has to handle a different response format.
   return res
     .status(200)
     .json(new ApiResponse(200, videos, "Videos fetched successfully"));
@@ -145,10 +160,85 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: get video by id
-  const video = await Video.findById(videoId);
+
+  if (!isValidObjectId(videoId)) {
+    throw new apiError(400, "Invalid video ID");
+  }
+
+  // req.user is only set if this route runs behind verifyJWT.
+  // Without it, isLiked / isSubscribed simply come back false.
+  const userId = req.user?._id
+    ? new mongoose.Types.ObjectId(req.user._id)
+    : null;
+
+  const [video] = await Video.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(videoId) } },
+
+    // All likes on this video (used for the count and for isLiked)
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+
+    // Owner details + subscriber info
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+        pipeline: [
+          {
+            $lookup: {
+              from: "subscriptions",
+              localField: "_id",
+              foreignField: "channel",
+              as: "subscribers",
+            },
+          },
+          {
+            $addFields: {
+              subscribersCount: { $size: "$subscribers" },
+              isSubscribed: { $in: [userId, "$subscribers.subscriber"] },
+            },
+          },
+          {
+            $project: {
+              username: 1,
+              fullName: 1,
+              avatar: 1,
+              subscribersCount: 1,
+              isSubscribed: 1,
+            },
+          },
+        ],
+      },
+    },
+
+    {
+      $addFields: {
+        ownerDetails: { $first: "$ownerDetails" },
+        likesCount: { $size: "$likes" },
+        isLiked: { $in: [userId, "$likes.likedBy"] },
+      },
+    },
+    { $project: { likes: 0 } },
+  ]);
+
   if (!video) {
     throw new apiError(404, "Video not found");
   }
+
+  // Unpublished videos are visible only to their owner
+  const isOwner = userId && String(video.owner) === String(userId);
+  if (!video.isPublished && !isOwner) {
+    throw new apiError(404, "Video not found");
+  }
+
   return res
     .status(200)
     .json(new ApiResponse(200, video, "Video fetched successfully"));
@@ -211,6 +301,8 @@ const updateVideo = asyncHandler(async (req, res) => {
   }
 
   // 6. Purana thumbnail cloudinary se delete kar do (agar naya upload hua ho)
+  // TODO: deleteFromCloudinary expects a public_id, but this passes the full URL,
+  // so the old file is not actually removed yet. Extract the public_id from the URL.
   if (thumbnail?.url && video.thumbnail) {
     await deleteFromCloudinary(video.thumbnail);
   }
@@ -234,6 +326,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
   }
 
   // Delete the video from Cloudinary
+  // TODO: same public_id issue as above (and videos need resourceType "video").
   if (video.videoFile) {
     await deleteFromCloudinary(video.videoFile);
   }
