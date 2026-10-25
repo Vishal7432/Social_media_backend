@@ -1,5 +1,6 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import Video from "../models/video.models.js";
+import VideoView from "../models/videoView.model.js";
 import User from "../models/user.model.js";
 import apiError from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -244,6 +245,43 @@ const getVideoById = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, video, "Video fetched successfully"));
 });
 
+const recordVideoView = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+  if (!isValidObjectId(videoId)) {
+    throw new apiError(400, "Invalid video ID");
+  }
+
+  const video = await Video.findOneAndUpdate(
+    {
+      _id: videoId,
+      $or: [{ isPublished: true }, { owner: req.user._id }],
+    },
+    { $inc: { views: 1 } },
+    { new: true }
+  ).select("_id owner");
+
+  if (!video) {
+    throw new apiError(404, "Video not found");
+  }
+
+  try {
+    await VideoView.create({ video: video._id, owner: video.owner });
+  } catch (error) {
+    const rollback = await Video.updateOne(
+      { _id: video._id, views: { $gt: 0 } },
+      { $inc: { views: -1 } }
+    );
+    if (rollback.modifiedCount !== 1) {
+      throw new apiError(500, "Failed to record video view and restore count");
+    }
+    throw error;
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, null, "Video view recorded successfully"));
+});
+
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   const { title, description } = req.body;
@@ -336,6 +374,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   // Delete the video from the database
   await Video.findByIdAndDelete(videoId);
+  await VideoView.deleteMany({ video: videoId });
 
   return res
     .status(200)
@@ -363,6 +402,7 @@ export {
   getAllVideos,
   publishAVideo,
   getVideoById,
+  recordVideoView,
   updateVideo,
   deleteVideo,
   togglePublishStatus,

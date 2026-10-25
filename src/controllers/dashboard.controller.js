@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Video from "../models/video.models.js";
 import Subscription from "../models/subcription.model.js";
 import { Like } from "../models/likes.model.js";
+import VideoView from "../models/videoView.model.js";
 import apiError from "../utils/apiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncFunction.js";
@@ -13,42 +14,93 @@ const getChannelStats = asyncHandler(async (req, res) => {
     throw new apiError(400, "Invalid channel id");
   }
 
-  // Total subscribers of this channel
-  const totalSubscribers = await Subscription.countDocuments({
-    channel: channelId,
-  });
+  const ownerId = new mongoose.Types.ObjectId(channelId);
+  const startDate = new Date();
+  startDate.setUTCHours(0, 0, 0, 0);
+  startDate.setUTCDate(startDate.getUTCDate() - 6);
 
-  // Total videos + total views of the channel (in one aggregation)
-  const videoStats = await Video.aggregate([
-    {
-      $match: {
-        owner: new mongoose.Types.ObjectId(channelId),
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        totalVideos: { $sum: 1 },
-        totalViews: { $sum: "$views" },
-        videoIds: { $push: "$_id" },
-      },
-    },
-  ]);
+  const [totalSubscribers, videoStats, dailyViews, dailySubscribers] =
+    await Promise.all([
+      Subscription.countDocuments({ channel: ownerId }),
+      Video.aggregate([
+        { $match: { owner: ownerId } },
+        {
+          $group: {
+            _id: null,
+            totalVideos: { $sum: 1 },
+            totalViews: { $sum: "$views" },
+            videoIds: { $push: "$_id" },
+          },
+        },
+      ]),
+      VideoView.aggregate([
+        { $match: { owner: ownerId, createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$createdAt",
+                timezone: "UTC",
+              },
+            },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Subscription.aggregate([
+        { $match: { channel: ownerId, createdAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$createdAt",
+                timezone: "UTC",
+              },
+            },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
 
   const totalVideos = videoStats[0]?.totalVideos || 0;
   const totalViews = videoStats[0]?.totalViews || 0;
   const videoIds = videoStats[0]?.videoIds || [];
 
-  // Total likes across all videos of this channel
-  const totalLikes = await Like.countDocuments({
-    video: { $in: videoIds },
-  });
+  const totalLikes = await Like.countDocuments({ video: { $in: videoIds } });
+
+  const viewsByDate = new Map(dailyViews.map(({ _id, count }) => [_id, count]));
+  const subscribersByDate = new Map(
+    dailySubscribers.map(({ _id, count }) => [_id, count])
+  );
+  const viewsTrend = [];
+  const subscribersTrend = [];
+
+  for (let offset = 0; offset < 7; offset += 1) {
+    const date = new Date(startDate);
+    date.setUTCDate(startDate.getUTCDate() + offset);
+    const dateKey = date.toISOString().slice(0, 10);
+    const day = new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      timeZone: "UTC",
+    }).format(date);
+
+    viewsTrend.push({ day, views: viewsByDate.get(dateKey) ?? 0 });
+    subscribersTrend.push({
+      day,
+      subscribers: subscribersByDate.get(dateKey) ?? 0,
+    });
+  }
 
   const channelStats = {
     totalSubscribers,
     totalVideos,
     totalViews,
     totalLikes,
+    viewsTrend,
+    subscribersTrend,
   };
 
   return res
